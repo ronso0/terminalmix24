@@ -2649,6 +2649,7 @@
                 <status>0x90</status>
                 <midino>0x56</midino>
                 <minimum>0.1</minimum>
+                <maximum>2</maximum>
             </output>
             <output>
                 <group>[Channel1]</group>
@@ -2657,6 +2658,7 @@
                 <status>0x90</status>
                 <midino>0x10</midino>
                 <minimum>0.1</minimum>
+                <maximum>2</maximum>
             </output>
             <output>
                 <group>[Channel1]</group>
@@ -2665,6 +2667,7 @@
                 <status>0x90</status>
                 <midino>0x57</midino>
                 <minimum>0.1</minimum>
+                <maximum>2</maximum>
             </output>
             <output>
                 <group>[Channel1]</group>
@@ -2673,6 +2676,7 @@
                 <status>0x90</status>
                 <midino>0x11</midino>
                 <minimum>0.1</minimum>
+                <maximum>2</maximum>
             </output>
             <output>
                 <group>[Channel1]</group>
@@ -2681,6 +2685,7 @@
                 <status>0x90</status>
                 <midino>0x58</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel1]</group>
@@ -2689,6 +2694,7 @@
                 <status>0x90</status>
                 <midino>0x12</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel1]</group>
@@ -2697,6 +2703,7 @@
                 <status>0x90</status>
                 <midino>0x59</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel1]</group>
@@ -2705,6 +2712,7 @@
                 <status>0x90</status>
                 <midino>0x13</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel1]</group>
@@ -2713,6 +2721,7 @@
                 <status>0x90</status>
                 <midino>0x5A</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel1]</group>
@@ -2721,6 +2730,7 @@
                 <status>0x90</status>
                 <midino>0x14</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel1]</group>
@@ -2729,6 +2739,7 @@
                 <status>0x90</status>
                 <midino>0x5B</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel1]</group>
@@ -2737,6 +2748,7 @@
                 <status>0x90</status>
                 <midino>0x15</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel1]</group>
@@ -2745,6 +2757,7 @@
                 <status>0x90</status>
                 <midino>0x5C</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel1]</group>
@@ -2753,6 +2766,7 @@
                 <status>0x90</status>
                 <midino>0x16</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel1]</group>
@@ -2761,6 +2775,7 @@
                 <status>0x90</status>
                 <midino>0x5D</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel1]</group>
@@ -2769,6 +2784,7 @@
                 <status>0x90</status>
                 <midino>0x17</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel1]</group>
@@ -2867,6 +2883,7 @@
                 <status>0x91</status>
                 <midino>0x56</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel2]</group>
@@ -2875,6 +2892,7 @@
                 <status>0x91</status>
                 <midino>0x10</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel2]</group>
@@ -2883,6 +2901,7 @@
                 <status>0x91</status>
                 <midino>0x57</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel2]</group>
@@ -2891,6 +2910,7 @@
                 <status>0x91</status>
                 <midino>0x11</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel2]</group>
@@ -2899,6 +2919,7 @@
                 <status>0x91</status>
                 <midino>0x58</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel2]</group>
@@ -2907,6 +2928,7 @@
                 <status>0x91</status>
                 <midino>0x12</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel2]</group>
@@ -2915,6 +2937,7 @@
                 <status>0x91</status>
                 <midino>0x59</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel2]</group>
@@ -2923,6 +2946,7 @@
                 <status>0x91</status>
                 <midino>0x13</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel2]</group>
@@ -2931,6 +2955,7 @@
                 <status>0x91</status>
                 <midino>0x5A</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel2]</group>
@@ -2939,6 +2964,7 @@
                 <status>0x91</status>
                 <midino>0x14</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel2]</group>
@@ -2947,6 +2973,7 @@
                 <status>0x91</status>
                 <midino>0x5B</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel2]</group>
@@ -2955,6 +2982,7 @@
                 <status>0x91</status>
                 <midino>0x15</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel2]</group>
@@ -2963,6 +2991,7 @@
                 <status>0x91</status>
                 <midino>0x5C</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel2]</group>
@@ -2971,6 +3000,7 @@
                 <status>0x91</status>
                 <midino>0x16</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel2]</group>
@@ -2979,6 +3009,7 @@
                 <status>0x91</status>
                 <midino>0x5D</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel2]</group>
@@ -2987,6 +3018,7 @@
                 <status>0x91</status>
                 <midino>0x17</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel2]</group>
@@ -3085,6 +3117,7 @@
                 <status>0x92</status>
                 <midino>0x56</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel3]</group>
@@ -3093,6 +3126,7 @@
                 <status>0x92</status>
                 <midino>0x10</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel3]</group>
@@ -3101,6 +3135,7 @@
                 <status>0x92</status>
                 <midino>0x57</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel3]</group>
@@ -3109,6 +3144,7 @@
                 <status>0x92</status>
                 <midino>0x11</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel3]</group>
@@ -3117,6 +3153,7 @@
                 <status>0x92</status>
                 <midino>0x58</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel3]</group>
@@ -3125,6 +3162,7 @@
                 <status>0x92</status>
                 <midino>0x12</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel3]</group>
@@ -3133,6 +3171,7 @@
                 <status>0x92</status>
                 <midino>0x59</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel3]</group>
@@ -3141,6 +3180,7 @@
                 <status>0x92</status>
                 <midino>0x13</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel3]</group>
@@ -3149,6 +3189,7 @@
                 <status>0x92</status>
                 <midino>0x5A</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel3]</group>
@@ -3157,6 +3198,7 @@
                 <status>0x92</status>
                 <midino>0x14</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel3]</group>
@@ -3165,6 +3207,7 @@
                 <status>0x92</status>
                 <midino>0x5B</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel3]</group>
@@ -3173,6 +3216,7 @@
                 <status>0x92</status>
                 <midino>0x15</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel3]</group>
@@ -3181,6 +3225,7 @@
                 <status>0x92</status>
                 <midino>0x5C</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel3]</group>
@@ -3189,6 +3234,7 @@
                 <status>0x92</status>
                 <midino>0x16</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel3]</group>
@@ -3197,6 +3243,7 @@
                 <status>0x92</status>
                 <midino>0x5D</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel3]</group>
@@ -3205,6 +3252,7 @@
                 <status>0x92</status>
                 <midino>0x17</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel3]</group>
@@ -3295,6 +3343,7 @@
                 <status>0x93</status>
                 <midino>0x56</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel4]</group>
@@ -3303,6 +3352,7 @@
                 <status>0x93</status>
                 <midino>0x10</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel4]</group>
@@ -3311,6 +3361,7 @@
                 <status>0x93</status>
                 <midino>0x57</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel4]</group>
@@ -3319,6 +3370,7 @@
                 <status>0x93</status>
                 <midino>0x11</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel4]</group>
@@ -3327,6 +3379,7 @@
                 <status>0x93</status>
                 <midino>0x58</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel4]</group>
@@ -3335,6 +3388,7 @@
                 <status>0x93</status>
                 <midino>0x12</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel4]</group>
@@ -3343,6 +3397,7 @@
                 <status>0x93</status>
                 <midino>0x59</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel4]</group>
@@ -3351,6 +3406,7 @@
                 <status>0x93</status>
                 <midino>0x13</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel4]</group>
@@ -3359,6 +3415,7 @@
                 <status>0x93</status>
                 <midino>0x5A</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel4]</group>
@@ -3367,6 +3424,7 @@
                 <status>0x93</status>
                 <midino>0x14</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel4]</group>
@@ -3375,6 +3433,7 @@
                 <status>0x93</status>
                 <midino>0x5B</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel4]</group>
@@ -3383,6 +3442,7 @@
                 <status>0x93</status>
                 <midino>0x15</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel4]</group>
@@ -3391,6 +3451,7 @@
                 <status>0x93</status>
                 <midino>0x5C</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel4]</group>
@@ -3399,6 +3460,7 @@
                 <status>0x93</status>
                 <midino>0x16</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel4]</group>
@@ -3407,6 +3469,7 @@
                 <status>0x93</status>
                 <midino>0x5D</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel4]</group>
@@ -3415,6 +3478,7 @@
                 <status>0x93</status>
                 <midino>0x17</midino>
                 <minimum>0.1</minimum>
+                <maximum>2.0</maximum>
             </output>
             <output>
                 <group>[Channel4]</group>
