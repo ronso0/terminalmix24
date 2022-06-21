@@ -334,6 +334,49 @@ TerminalMix.shiftBeatsKnobTurn = function (channel, control, value, status, grou
 }
 
 
+// Shifted hotcue press
+// short: activate saved loop(don't jump)
+// long: delete cue
+TerminalMix.hotcueShift = function (channel, control, value, status, group) {
+    var index = control - 55;
+
+    // return if no hotcue / loopcue is set
+    if (engine.getValue(group, "hotcue_" + index + "_enabled") <= 0) {
+      return;
+    }
+
+    if (value) { // press
+        print("");
+        print("   hotcueShift" + group + ":" + index + "pressed");
+        TerminalMix.hotcueLongPressed[group, index] = false;
+        TerminalMix.loopInTimers[group, index] = engine.beginTimer(
+            500,
+            function() {
+                print("");
+                print("   hotcueShift" + group + ":" + index + " longpressed");
+                print("");
+                TerminalMix.hotcueLongPressed[group, index] = true;
+                TerminalMix.hotcueTimers[group, index] = null;
+            },
+            true);
+    } else { // release
+        print("");
+        print("   hotcueShift" + group + ":" + index + "released");
+        print("");
+        if (TerminalMix.hotcueLongPressed[group, index] == true) {
+            // longpress clears the cue
+            script.triggerControl(group, "hotcue_" + index + "_clear", 100);
+        } else {
+            // shortpress activates loop
+            script.triggerControl(group, "hotcue_" + index + "_cueloop", 100);
+        }
+        if (TerminalMix.hotcueTimers[group, index] !== null) {
+            engine.stopTimer(TerminalMix.hotcueTimers[group, index]);
+            delete TerminalMix.hotcueTimers[group, index];
+        }
+        TerminalMix.hotcueLongPressed[group, index] = false;
+    }
+}
 
 // normal:  pitch slider
 // shifted: randomize bpm within +-30% of track's original speed
