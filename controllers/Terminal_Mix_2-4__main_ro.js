@@ -39,13 +39,13 @@ var startFactor = 3.0;
 // longpress timers & parameters
 TerminalMix.state = [];
 TerminalMix.timers = [];
-TerminalMix.loadButtonTimers = [];
+TerminalMix.loadButtonTimers = []; // decks + samplers
+TerminalMix.hotcueTimers = [];
 TerminalMix.beatsKnobTimers = [];
 TerminalMix.loopLengthTimers = [];
 TerminalMix.loopInTimers = [];
 TerminalMix.loopOutTimers = [];
-TerminalMix.rangeButtonTimers = [];
-TerminalMix.traxKnobTimer = null;
+// TerminalMix.loopMarkerMoveFactor = 1;
 
 TerminalMix.shift = false;
 TerminalMix.shiftL = false;
@@ -53,20 +53,21 @@ TerminalMix.shiftR = false;
 
 TerminalMix.traxKnobPressed = false;
 
-TerminalMix.loadButtonLongPressed = [];
+TerminalMix.loadButtonLongPressed = []; // decks + samplers
+TerminalMix.hotcueLongPressed = [];
 TerminalMix.beatsKnobLongPressed = [];
 TerminalMix.loopLengthLongPressed = [];
-TerminalMix.rangeButtonLongPressed = [];
 TerminalMix.loopMovePressedL = false;
 TerminalMix.loopMovePressedR = false;
 TerminalMix.loopInLongPressed = [];
 TerminalMix.loopOutLongPressed = [];
 
-TerminalMix.beatsKnobPressed = [];
-TerminalMix.rangeButtonPressed = [];
+TerminalMix.beatsKnobPressed = [false];
 
 TerminalMix.cloneMode = false;
 TerminalMix.cloneSource = null;
+
+TerminalMix.otherTrackMenuClosed = false;
 
 //var fxAssignMode = false;
 
@@ -75,24 +76,55 @@ TerminalMix.cloneSource = null;
 TerminalMix.init = function (id,debug) {
     TerminalMix.id = id;
 
+    console.log("-------------------");
+    console.log("-------------------");
+    console.log("-------------------");
+    console.log("-------------------Num decks:" + numDecks);
+    console.log("-------------------");
+    console.log("-------------------");
+    console.log("-------------------");
     // Extinguish all LEDs
-    for (var j=1; j<=120; j++) {
-        midi.sendShortMsg(0x90+i,j,0x00);
+    for (var i=0; i<=3; i++) {
+        for (var j=1; j<=120; j++) {
+            midi.sendShortMsg(0x90+i,j,0x00);
+        }
     }
 
     // hide menubar
     engine.setValue("[Controls]","show_menubar",0);
 
-    for (var i=0; i<=3; i++) {  // 4 decks, 4 effect units, 4 aux/mic
-        engine.softTakeover("[EffectRack1_EffectUnit"+i+"]","mix",0);
-        engine.setValue("[EffectRack1_EffectUnit"+i+"]","mix",1);
+    for (var i=1; i<=4; i++) {  // 4 decks, 4 effect units, 4 aux/mic
+        // must have for a 4-deck controller !!
+        var group = "[Channel" + i + "]";
+        TerminalMix.loadButtonLongPressed[group] = false;
+        TerminalMix.beatsKnobLongPressed[group] = false;
+        TerminalMix.loopLengthLongPressed[group] = false;
+        TerminalMix.loopInLongPressed[group] = false;
+        TerminalMix.loopOutLongPressed[group] = false;
+
+        engine.setValue(group,"volume",0);
+        engine.softTakeover(group,"rate",1);
+
+        engine.setValue(group,"beatjump_size",defaultBeatjumpSize);
+        engine.setValue(group, "quantize", 0);
+        engine.softTakeover("[EffectRack1_EffectUnit"+i+"]", "mix", 0);
+        engine.setValue("[EffectRack1_EffectUnit"+i+"]", "mix", 1);
+        engine.setValue("[QuickEffectRack1_[Channel"+i+"]]", "enabled", 0);
         // remember to twist Fx Mix knobs after startup
 
         // turn off mic + aux
         var j = i;
         if (i == 1) { j = ""; } // exception for Aux1 and Mic1
         engine.setValue("[Microphone"+j+"]","talkover",0);
-        engine.setValue("[Auxiliary"+i+"]","master",0);
+        engine.setValue("[Auxiliary"+i+"]","main_mix",0);
+
+        // TODO -- components??
+        // connect deck controls:
+        // * play controls
+        // * hotcues
+        // * samplers
+        // * Load buttons
+        // * Pfl buttons
     }
     engine.setValue("[Master]","talkoverDucking",0);
 
@@ -102,45 +134,15 @@ TerminalMix.init = function (id,debug) {
     engine.setValue("[EffectRack1_EffectUnit3]","has_controller_focus",0);
     engine.setValue("[EffectRack1_EffectUnit4]","has_controller_focus",0);
 
-    for (var i=1; i<=numDecks; i++) {
-        // must have for a 4-deck controller !!
-        var group = "[Channel" + i + "]";
-        TerminalMix.loadButtonLongPressed[group] = false;
-        TerminalMix.beatsKnobLongPressed[group] = false;
-        TerminalMix.loopLengthLongPressed[group] = false;
-        TerminalMix.rangeButtonLongPressed[group] = false;
-
-        engine.setValue(group,"volume",0);
-        engine.softTakeover(group,"rate",1);
-        // engine.setValue(group,"keylock",1);
-
-        // scratching doesn't work on first touch.
-        // workaround: emulate wheel touch
-        // doesn't work
-        // engine.scratchEnable(1, 800, 33+1/3, alpha, beta);
-        // engine.scratchDisable(1);
-
-        engine.setValue(group,"beatjump_size",defaultBeatjumpSize);
-
-        // ToDo -- components??
-        // connect deck controls:
-        // * play controls
-        // * hotcues
-        // * samplers
-        // * Load buttons
-        // * Pfl buttons
-    }
-
-
     engine.softTakeover("[Master]","crossfader",true);
 
     // setup of some LED flash timers
-    // ToDo Hook up to
+    // TODO Hook up to
     // [Master],indicator_250millis
     // [Master],indicator_500millis
-    TerminalMix.timers["one50ms"] = engine.beginTimer(150,"TerminalMix.one50ms");
-    TerminalMix.timers["qtrSec"] = engine.beginTimer(250,"TerminalMix.qtrSec");
-    TerminalMix.timers["halfSec"] = engine.beginTimer(500,"TerminalMix.halfSec");
+    TerminalMix.timers["one50ms"] = engine.beginTimer(150, function() {TerminalMix.one50ms()});
+    TerminalMix.timers["qtrSec"] = engine.beginTimer(250, function() {TerminalMix.qtrSec();});
+    TerminalMix.timers["halfSec"] = engine.beginTimer(500,function() {TerminalMix.halfSec();});
 
     // Prepare samplers
     for (var i=numSamplers; i>=1; i--) {
@@ -164,16 +166,9 @@ TerminalMix.shutdown = function () {
     for (var i=0; i<TerminalMix.loadButtonTimers.length; i++) {
         engine.stopTimer(TerminalMix.loadButtonTimers[i]);
     }
-    for (var i=0; i<TerminalMix.beatsKnobTimers.length; i++) {
-        engine.stopTimer(TerminalMix.beatsKnobTimers[i]);
-    }
-    for (var i=0; i<TerminalMix.rangeButtonTimers.length; i++) {
-        engine.stopTimer(TerminalMix.rangeButtonTimers[i]);
-    }
     for (var i=0; i<TerminalMix.loopLengthTimers.length; i++) {
         engine.stopTimer(TerminalMix.loopLengthTimers[i]);
     }
-    engine.stopTimer(TerminalMix.traxKnobTimer);
 
     // Extinguish all LEDs
     for (var i=0; i<=3; i++) {  // 4 decks
@@ -381,9 +376,9 @@ TerminalMix.hotcueShift = function (channel, control, value, status, group) {
 // normal:  pitch slider
 // shifted: randomize bpm within +-30% of track's original speed
 //          helps to practice beat matching by ear
-TerminalMix.pitchSlider = function (channel, control, value, status, group) {
+TerminalMix.pitchSlider = function(channel, control, value, status, group) {
     // normal
-    if (TerminalMix.shift == false) {
+    if (!TerminalMix.shift) {
         engine.setValue(group,"rate",-script.midiPitch(control, value, status));
     // shifted
     } else {
@@ -478,7 +473,7 @@ TerminalMix.loopLengthTurn = function (channel, control, value, status, group) {
 }
 
 TerminalMix.loopMovePress = function (channel, control, value, status, group) {
-    // ToDo
+    // TODO
     // fix & clean up
 
     /* This sets a boolean allowing to correctly interpret any turn of the loopmove encoder.
@@ -523,12 +518,14 @@ TerminalMix.loopMovePress = function (channel, control, value, status, group) {
 
 TerminalMix.loopMoveTurn = function (channel, control, value, status, group) {
     var leftChannel = false;
+    var rightChannel = true;
     if (channel === 1 || channel === 3) {
         leftChannel = true;
+        rightChannel = false;
     }
     // LoopMove pressed: change beatjump_size
     if ((leftChannel && TerminalMix.loopMovePressedL)
-      || (!leftChannel && TerminalMix.loopMovePressedR)) {
+      || (rightChannel && TerminalMix.loopMovePressedR)) {
         TerminalMix.setBeatjumpSize(group, value);
     // loopmove / beatjump
     } else {
@@ -536,11 +533,10 @@ TerminalMix.loopMoveTurn = function (channel, control, value, status, group) {
     }
 }
 
-TerminalMix.shiftedLoopMoveTurn = function (channel, control, value, status, group) {
+TerminalMix.shiftedLoopMoveTurn = function(channel, control, value, status, group) {
   if (value === 65) {
       script.triggerControl(group,"beatjump_forward",100);
-  }
-  else if (value === 63) {
+  } else if (value === 63) {
       script.triggerControl(group,"beatjump_backward",100);
   }
 }
@@ -570,7 +566,7 @@ TerminalMix.loopMoveBeatJump = function (group, value) {
   }
 }
 
-TerminalMix.setBeatjumpSize = function (group, value) {
+TerminalMix.setBeatjumpSize = function(group, value) {
     if (value === 65) {
         engine.setValue(group,"beatjump_size",engine.getValue(group,"beatjump_size")*2);
     }
@@ -587,16 +583,16 @@ TerminalMix.setBeatjumpSize = function (group, value) {
 // * release loop_in
 TerminalMix.loopIn = function (channel, control, value, status, group) {
     if (value) { // press
-        // print("");
-        // print("   LoopIn"+group+" pressed");
-        // print("");
+        // console.log(" ");
+        // console.log("   LoopIn"+group+" pressed");
+        // console.log(" ");
         TerminalMix.loopInLongPressed[group] = false;
         TerminalMix.loopInTimers[group] = engine.beginTimer(
             300,
             function() {
-                // print("");
-                // print("   Loop In"+group+" longpressed");
-                // print("");
+                // console.log(" ");
+                // console.log("   Loop In"+group+" longpressed");
+                // console.log(" ");
                 TerminalMix.loopInLongPressed[group] = true;
                 TerminalMix.loopInTimers[group] = null;
             },
@@ -609,21 +605,22 @@ TerminalMix.loopIn = function (channel, control, value, status, group) {
             engine.stopTimer(TerminalMix.loopInTimers[group]);
             delete TerminalMix.loopInTimers[group];
         }
-        TerminalMix.loopOutLongPressed[group] = false;
+        TerminalMix.loopInLongPressed[group] = false;
     }
 }
+
 TerminalMix.loopOut = function (channel, control, value, status, group) {
     if (value) {
-      // print("");
-      // print("   LoopOut"+group+" pressed");
-      // print("");
+      // console.log(" ");
+      // console.log("   LoopOut"+group+" pressed");
+      // console.log(" ");
       TerminalMix.loopOutLongPressed[group] = false;
       TerminalMix.loopOutTimers[group] = engine.beginTimer(
         300,
         function() {
-            // print("");
-            // print("   Loop Out"+group+" longpressed");
-            // print("");
+            // console.log(" ");
+            // console.log("   Loop Out"+group+" longpressed");
+            // console.log(" ");
             TerminalMix.loopOutLongPressed[group] = true;
             TerminalMix.loopOutTimers[group] = null;
         },
@@ -632,9 +629,9 @@ TerminalMix.loopOut = function (channel, control, value, status, group) {
         if (TerminalMix.loopOutLongPressed[group] == false) {
             script.triggerControl(group, "loop_out", 100);
         }
-        if (TerminalMix.loopInTimers[group] !== null) {
-            engine.stopTimer(TerminalMix.loopInTimers[group]);
-            delete TerminalMix.loopInTimers[group];
+        if (TerminalMix.loopOutTimers[group] !== null) {
+            engine.stopTimer(TerminalMix.loopOutTimers[group]);
+            delete TerminalMix.loopOutTimers[group];
         }
         TerminalMix.loopOutLongPressed[group] = false;
     }
@@ -678,28 +675,22 @@ TerminalMix.SamplerVolume = function (channel, control, value, status, group) {
 
 
 // Sampler button
-// short press
-//   * load selected track from library to sampler
-//   if Load of deck1-4 is pressed
-//   * clone track from there
-// long press:
-//   * use deck as clone source. press another Sampler or deck Load button to clone
+// short press load selected track from library to sampler
+// If Load of deck1-4 is pressed: clone track from there
+// long press: use deck as clone source. press another Sampler or deck Load button to clone
 TerminalMix.loadCloneSampler = function (channel, control, value, status, group) {
   // press
   if (value) {
       TerminalMix.loadButtonLongPressed[group] = false;
       TerminalMix.loadButtonTimers[group] = engine.beginTimer(
-        300,
-        function() {
-            TerminalMix.loadButtonLongPressed[group] = true;
-            TerminalMix.loadButtonTimers[group] = null;
-            TerminalMix.cloneMode = true;
-            TerminalMix.cloneSource = group;
-            // print("");
-            // print("   "+group+" longpressed > TerminalMix.cloneSource");
-            // print("");
-        },
-        true);
+          300,
+          function() {
+              TerminalMix.loadButtonLongPressed[group] = true;
+              TerminalMix.loadButtonTimers[group] = null;
+              TerminalMix.cloneMode = true;
+              TerminalMix.cloneSource = group;
+          },
+          true);
   // release
   } else {
       // quick release
@@ -730,8 +721,8 @@ TerminalMix.loadCloneSampler = function (channel, control, value, status, group)
           }
       // Longpress release
       } else {
-          // clear TerminalMix.cloneMode and TerminalMix.cloneSource after long-press release, not after cloning:
-          // maybe we want to clone this deck to yet another deck
+          // clear TerminalMix.cloneMode and TerminalMix.cloneSource after long-press release,
+          // not after cloning: maybe we want to clone this deck to yet another deck
           TerminalMix.cloneMode = false;
           TerminalMix.cloneSource = null;
       }
@@ -741,104 +732,117 @@ TerminalMix.loadCloneSampler = function (channel, control, value, status, group)
 
 
 // Load button
-// short press
-//   * load track to deck
-//   * enable Pfl
+// short press: load track to deck
 // long press:
 //   * Trax knob changes star rating
 //   * use deck as clone source. press another Sampler or deck Load button to clone
 TerminalMix.loadCloneDeckStars = function (channel, control, value, status, group) {
     // press
-    if (TerminalMix.shift == true) {
-        script.triggerControl(group, "eject");
-    } else {
-        if (value) {
-            TerminalMix.loadButtonLongPressed[group] = false;
-            TerminalMix.loadButtonTimers[group] = engine.beginTimer(
-              300,
-              function() {
-                  TerminalMix.loadButtonLongPressed[group] = true;
-                  TerminalMix.loadButtonTimers[group] = null;
-                  TerminalMix.cloneMode = true;
-                  TerminalMix.cloneSource = group;
-                  // print("");
-                  // print("   "+group+" longpressed > TerminalMix.cloneSource");
-                  // print("");
-              },
-              true);
-        // release
-        } else {
-            // quick release
-            if (TerminalMix.loadButtonLongPressed[group] == false) {
-                engine.stopTimer(TerminalMix.loadButtonTimers[group]);
+    if (value) {
+        // every regular press will close any open track menu
+        // track pressed state via cloneMode, e.g. for TraxKnobPress > show track menu
+        TerminalMix.loadButtonLongPressed[group] = false;
+        TerminalMix.loadButtonTimers[group] = engine.beginTimer(
+            300,
+            function() {
+                TerminalMix.loadButtonLongPressed[group] = true;
                 TerminalMix.loadButtonTimers[group] = null;
-                // load track if no other Load button is currently pressed
-                if (TerminalMix.cloneMode == false) {
-                    script.triggerControl(group, "LoadSelectedTrack", 100);
-                    // engine.setValue(group,"pfl",1);
-                // clone from long-press group to short-press group
-                } else {
-                    // TerminalMix.cloneSourceNum = parseInt(script.samplerRegEx.exec(TerminalMix.cloneSource)[1]);
-                    TerminalMix.cloneSourceNum = TerminalMix.cloneSource.substr(8, 1);
-                    // print("");
-                    // print("     TerminalMix.cloneSource: " + TerminalMix.cloneSource + " #" + TerminalMix.cloneSourceNum);
-                    // print("");
-                    switch (TerminalMix.cloneSource.substr(1, 7)) {
-                        case "Channel":
-                            engine.setValue(group,
-                                      "CloneFromDeck",
-                                      TerminalMix.cloneSourceNum);
-                            break;
-                        case "Sampler":
-                            engine.setValue(group,
-                                      "CloneFromSampler",
-                                      TerminalMix.cloneSourceNum);
-                            break;
-                    }
-                }
-            // Longpress release
-            } else {
-                // clear TerminalMix.cloneMode after long-press release, not after cloning:
-                // maybe we want to clone this deck to yet another deck
-                TerminalMix.cloneMode = false;
-                TerminalMix.cloneSource = null;
-            }
-            TerminalMix.loadButtonLongPressed[group] = false;
+                TerminalMix.cloneMode = true;
+                TerminalMix.cloneSource = group;
+            },
+            true);
+    // release
+    } else {
+        // if press just closed track menu/s that should be a discrete action,
+        // so release does nothing
+        if (TerminalMix.otherTrackMenuClosed == true) {
+            TerminalMix.otherTrackMenuClosed = false;
+            return;
         }
+
+        // long press release
+        if (TerminalMix.loadButtonLongPressed[group]) {
+            // clear TerminalMix.cloneMode after longpress release, not after cloning.
+            // maybe we want to clone this deck to yet another deck
+            TerminalMix.cloneMode = false;
+            TerminalMix.cloneSource = null;
+        // quick release
+        } else {
+            engine.stopTimer(TerminalMix.loadButtonTimers[group]);
+            TerminalMix.loadButtonTimers[group] = null;
+            if (TerminalMix.cloneMode == false) {
+                // load track if no other Load button is currently pressed
+                script.triggerControl(group, "LoadSelectedTrack", 100);
+                // engine.setValue(group,"pfl",1);
+            } else {
+                // clone from long-press group to short-press group
+                TerminalMix.cloneSourceNum = TerminalMix.cloneSource.substr(8, 1);
+                switch (TerminalMix.cloneSource.substr(1, 7)) {
+                    case "Channel":
+                        engine.setValue(group,
+                                  "CloneFromDeck",
+                                  TerminalMix.cloneSourceNum);
+                        break;
+                    case "Sampler":
+                        engine.setValue(group,
+                                  "CloneFromSampler",
+                                  TerminalMix.cloneSourceNum);
+                        break;
+                }
+            }
+        }
+        TerminalMix.loadButtonLongPressed[group] = false;
     }
 }
 
 
 // normal:  GoToItem / focus searchbar
-// shifted: open/close track menu
+// shifted: open/close library track menu
 TerminalMix.traxKnobPress = function (channel, control, value, status, group) {
-  // press
-    if (value) {
-        // normal
-        if (!TerminalMix.shift) {
-            // if the tracks table has focus > move to search bar
-            if (engine.getValue("[Library]","focused_widget") === 3) {
-                engine.setValue("[Library]","focused_widget", "1");
-            // other widgets (or none)
-            } else {
-                script.triggerControl("[Library]","GoToItem", 100);
-                // Sorting the tracks table
-                // https://manual.mixxx.org/2.4/en/chapters/appendix/mixxx_controls.html#control-[Library]-sort_column
-                // Invert sorting of the current sort column:
-                //script.toggleControl("[Library]", "sort_order");
-                // Get/set the sort column
-                //var sortColumn = engine.getValue("[Library","sort_column");
-                // 1 artist, 2 title, 11 location, 15 BPM
-                //engine.setValue("[Library],sort_column_toggle", sortColumn);
+    // Note: no signal sent on press, only press+release on release
+    // ignore release
+    if (!value) {
+        return;
+    }
+    // shifted: toggle the tracks menu
+    if (TerminalMix.shift) {
+        // close all deck track menus first
+        // = shortcut to cancel all track menus
+        for (var i=1; i<=4; i++) {
+            if (engine.getValue("[Channel"+i+"]", "show_track_menu") == 1) {
+                engine.setValue("[Channel"+i+"]", "show_track_menu", 0);
             }
-        // shifted
-        // toggle the tracks menu
-        } else {
-            script.toggleControl("[Library]","show_track_menu", 100);
         }
-    // release
+        script.toggleControl("[Library]","show_track_menu", 100);
+    // normal
     } else {
+        // A deck Load button is pressed:
+        // press Trax to open that deck's track menu
+        if (TerminalMix.cloneMode == true) {
+            // console.log("     cloneMode" + TerminalMix.cloneSource);
+            if (TerminalMix.cloneSource.substr(1, 7) == "Channel") {
+                script.toggleControl(
+                    TerminalMix.cloneSource, "show_track_menu");
+            }
+            return;
+        }
 
+        // if the tracks table has focus > move to search bar
+        if (engine.getValue("[Library]","focused_widget") === 3) {
+            engine.setValue("[Library]","focused_widget", "1");
+
+        // other widgets focused (or none)
+        } else {
+            script.triggerControl("[Library]","GoToItem", 100);
+            // Sorting the tracks table
+            // https://manual.mixxx.org/2.4/en/chapters/appendix/mixxx_controls.html#control-[Library]-sort_column
+            // Invert sorting of the current sort column:
+            //script.toggleControl("[Library]", "sort_order");
+            // Get/set the sort column
+            //var sortColumn = engine.getValue("[Library","sort_column");
+            // 1 artist, 2 title, 11 location, 15 BPM
+            //engine.setValue("[Library],sort_column_toggle", sortColumn);
+        }
     }
 }
 
@@ -846,185 +850,135 @@ TerminalMix.traxKnobPress = function (channel, control, value, status, group) {
 // shift:         scroll fast in table/tree (shifted)
 // Load pressed:  change star rating (Load button pressed)
 TerminalMix.traxKnobTurn = function (channel, control, value, status, group) {
-  // normal
-  if (!TerminalMix.shift) {
-      // Check if any Load button is pressed.
-      // If so, change the deck's star rating.
-      for (var i=1; i<=4; i++) {
-          var group = "[Channel"+i+"]";
-          if (TerminalMix.loadButtonLongPressed[group]) {
-              // print("");
-              // print("     trax turn: load deck"+i+" longpressed");
-              // print("               set stars");
-              // print("");
-              var direction = (value > 64) ? "_up" : "_down";
-              script.triggerControl(group, "stars"+direction, 50);
-              return;
-              // if (value === 65) {
-              //     engine.setValue(group, "stars_up", 1);
-              //     return;
-              // } else if (value === 63) {
-              //     engine.setValue(group, "stars_down", 1);
-              //     return;
-              // }
-          } else {
-              continue;
-          }
-      }
-      // knob not pressed
-      engine.setValue("[Library]","MoveVertical", value-64);
-      // if (value === 63) {
-      //     engine.setValue("[Library]","MoveUp", 1);
-      // } else if (value === 65) {
-      //     engine.setValue("[Library]","MoveDown", 1);
-      // }
-  // Shift pressed
-  } else {
-      engine.setValue("[Library]","ScrollVertical", value-64);
-      //engine.setValue("[Playlist]","SelectPlaylist", value-64);
-  }
-}
-
-// Range button
-// short press: toggle scrolling waveforms in Tango
-// short press: toggle loop section in Tango
-// long press:
-//      * FX1-3 + TAP un/assign FX units to current deck
-TerminalMix.RangeButton = function (channel, control, value, status, group) {
-    // // press
-    // if (value) {
-    //     TerminalMix.rangeButtonLongPressed[group] = false;
-    //     TerminalMix.rangeButtonPressed[group] = true;
-    //     TerminalMix.loadButtonTimers[group] = engine.beginTimer(
-    //       500,
-    //       function() {
-    //           TerminalMix.rangeButtonLongPressed[group] = true;
-    //           TerminalMix.rangeButtonTimers[group] = null;
-    //           fxAssignMode = true; },
-    //       true);
-    // // release
-    // } else {
-    //     TerminalMix.rangeButtonPressed[group] = false;
-    //     // quick release
-    //     if (TerminalMix.rangeButtonLongPressed[group] == false) {
-    //       engine.stopTimer(TerminalMix.rangeButtonTimers[group]);
-    //       TerminalMix.rangeButtonTimers[group] = null;
-    //       if (TerminalMix.shift == false) {
-    //           script.toggleControl("[Skin]","show_waveforms");
-    //       } else {
-    //           script.toggleControl("[Skin]","show_loop_beatjump_controls");
-    //       }
-    //     // Longpress release
-    //     } else {
-    //         fxAssignMode = false;
-    //         TerminalMix.rangeButtonLongPressed[group] = false;
-    //     }
-    // }
+    // normal
+    if (!TerminalMix.shift) {
+        // Check if any Load button is pressed.
+        // If so, change the deck's star rating.
+        for (var i=1; i<=4; i++) {
+            var group = "[Channel"+i+"]";
+            if (TerminalMix.loadButtonLongPressed[group]) {
+                var direction = (value > 64) ? "_up" : "_down";
+                script.triggerControl(group, "stars"+direction, 50);
+                return;
+            } else {
+                continue;
+            }
+        }
+        // no Load button pressed
+        engine.setValue("[Library]","MoveVertical", value-64);
+    // shifted
+    } else {
+        engine.setValue("[Library]","ScrollVertical", value-64);
+        //engine.setValue("[Playlist]","SelectPlaylist", value-64);
+    }
 }
 
 // normal:  move focus forward
 // shifted: move focus backward
 TerminalMix.uiBackButton = function (channel, control, value, status, group) {
-  if (value === 127) {
-    if (TerminalMix.shift) {
-      engine.setValue(group,"MoveFocus", "-1");
-    } else {
-      engine.setValue(group,"MoveFocus", "1");
+    if (!value) {
+        return;
     }
-  }
+    if (TerminalMix.shift) {
+        engine.setValue(group,"MoveFocus", "-1");
+    } else {
+        engine.setValue(group,"MoveFocus", "1");
+    }
 }
 
 
 // normal:  toggle stacked waveforms
 // shifted: toggle main menubar
 TerminalMix.uiWaveformsMenu = function (channel, control, value, status, group) {
-  if (value === 127) {
-    if (TerminalMix.shift == false) {
-      script.toggleControl("[Skin]","show_waveforms");
-    } else {
-      script.toggleControl("[Controls]","show_menubar");
+    if (!value) {
+        return;
     }
-  }
+    if (!TerminalMix.shift) {
+        script.toggleControl("[Skin]","show_waveforms");
+    } else {
+        script.toggleControl("[Controls]","show_menubar");
+    }
 }
 
 // normal:  switch between 2/4 decks
 // shifted: toggle samplers/parking decks
 TerminalMix.ui4decksSamplers = function (channel, control, value, status, group) {
-  if (value === 127) {
-    if (TerminalMix.shift == false) {
-      script.toggleControl("[Skin]","show_4decks");
-    } else {
-      script.toggleControl("[Samplers]","show_samplers");
+    if (!value) {
+        return;
     }
-  }
+    if (!TerminalMix.shift) {
+        script.toggleControl("[Skin]","show_4decks");
+    } else {
+        script.toggleControl("[Samplers]","show_samplers");
+    }
 }
 
 // normal:  toggle mixer
 // shifted: toggle Mic / Aux
 TerminalMix.uiMixerMicAux = function (channel, control, value, status, group) {
-  if (value === 127) {
-    if (TerminalMix.shift == false) {
-      script.toggleControl("[Master]","show_mixer");
-    } else {
-      script.toggleControl("[Microphone]","show_microphone");
+    if (!value) {
+        return;
     }
-  }
+    if (!TerminalMix.shift) {
+        script.toggleControl("[Skin]","show_mixer");
+    } else {
+        script.toggleControl("[Microphone]","show_microphone");
+    }
 }
 
 // normal:  toggle fx units
 // shifted: toggle 2/4 fx units
 TerminalMix.uiFX = function (channel, control, value, status, group) {
-  if (value === 127) {
-    if (TerminalMix.shift == false) {
-      script.toggleControl("[EffectRack1]","show");
-    } else {
-      // TODO when switching to fx unit 3 or 4, enforce 4 fx units
-      // var show4Decks = engine.getValue("[Skin]","show_4effectunits");
-      // enforce showing the Fx rack when toggling 2/4 units
-      engine.setValue("[EffectRack1]","show",1);
-      script.toggleControl("[Skin]","show_4effectunits");
+    if (!value) {
+        return;
     }
-  }
+    if (!TerminalMix.shift) {
+        script.toggleControl("[EffectRack1]","show");
+    } else {
+        // TODO when switching to fx unit 3 or 4, enforce 4 fx units
+        // var show4Decks = engine.getValue("[Skin]","show_4effectunits");
+        // enforce showing the Fx rack when toggling 2/4 units
+        engine.setValue("[EffectRack1]","show",1);
+        script.toggleControl("[Skin]","show_4effectunits");
+    }
 }
 
-// Left shift button
 TerminalMix.shiftButtonL = function (channel, control, value, status, group) {
-  // press
-  if (value === 127) {
-      // Use both Left and Right Shift for Fx
-      TerminalMix.effectUnit13.shift();
-      TerminalMix.effectUnit24.shift();
-      TerminalMix.shiftL = true;
-      TerminalMix.shift = true;
-  // release
-  } else {
-      TerminalMix.effectUnit13.unshift();
-      TerminalMix.effectUnit24.unshift();
-      TerminalMix.shiftL = false;
-      // When releasing check state of opposing Shift button.
-      // Reset the 'global' Shift state only if both are released.
-      if (TerminalMix.shiftR == false) {
-          TerminalMix.shift = false;
-      }
-  }
-};
-// Right shift button
+    // press
+    if (value) {
+        // Use both Left and Right Shift for Fx
+        TerminalMix.effectUnit13.shift();
+        TerminalMix.effectUnit24.shift();
+        TerminalMix.shiftL = true;
+        TerminalMix.shift = true;
+    // release
+    } else {
+        TerminalMix.effectUnit13.unshift();
+        TerminalMix.effectUnit24.unshift();
+        TerminalMix.shiftL = false;
+        // When releasing check state of opposing Shift button.
+        // Reset the 'global' Shift state only if both are released.
+        if (TerminalMix.shiftR == false) {
+            TerminalMix.shift = false;
+        }
+    }
+}
 TerminalMix.shiftButtonR = function (channel, control, value, status, group) {
-  // press
-  if (value === 127) {
-      TerminalMix.effectUnit13.shift();
-      TerminalMix.effectUnit24.shift();
-      TerminalMix.shiftR = true;
-      TerminalMix.shift = true;
-  // release
-  } else {
-      TerminalMix.effectUnit13.unshift();
-      TerminalMix.effectUnit24.unshift();
-      TerminalMix.shiftR = false;
-      if (TerminalMix.shiftL == false) {
-          TerminalMix.shift = false;
-      }
-  }
+    // press
+    if (value) {
+        TerminalMix.effectUnit13.shift();
+        TerminalMix.effectUnit24.shift();
+        TerminalMix.shiftR = true;
+        TerminalMix.shift = true;
+    // release
+    } else {
+        TerminalMix.effectUnit13.unshift();
+        TerminalMix.effectUnit24.unshift();
+        TerminalMix.shiftR = false;
+        if (TerminalMix.shiftL == false) {
+            TerminalMix.shift = false;
+        }
+    }
 }
 
 // Fx units instantiation via midi-components-0.0__main_ro.js
@@ -1032,6 +986,9 @@ TerminalMix.shiftButtonR = function (channel, control, value, status, group) {
 //    allowFocusWhenParametersHidden
 //    * pressing fx focus button automatically expands Fx units
 //    = show fx focus buttons in colapsed units
+
+// why is this at the end?
+
 // EffectUnits 1/3
 TerminalMix.effectUnit13 = new components.EffectUnit([1,3], true);
 TerminalMix.effectUnit13.enableButtons[1].midi = [0x90, 0x07];
@@ -1040,7 +997,7 @@ TerminalMix.effectUnit13.enableButtons[3].midi = [0x90, 0x09];
 TerminalMix.effectUnit13.knobs[1].midi = [0xB0, 0x01];
 TerminalMix.effectUnit13.knobs[2].midi = [0xB0, 0x02];
 TerminalMix.effectUnit13.knobs[3].midi = [0xB0, 0x03];
-TerminalMix.effectUnit13.dryWetKnob.midi = [0xB0, 0x2B];
+// TerminalMix.effectUnit13.dryWetKnob.midi = [0xB0, 0x2B];
 TerminalMix.effectUnit13.effectFocusButton.midi = [0x90, 0x0A];
 TerminalMix.effectUnit13.init();
 
@@ -1052,13 +1009,9 @@ TerminalMix.effectUnit24.enableButtons[3].midi = [0x91, 0x09];
 TerminalMix.effectUnit24.knobs[1].midi = [0xB1, 0x01];
 TerminalMix.effectUnit24.knobs[2].midi = [0xB1, 0x02];
 TerminalMix.effectUnit24.knobs[3].midi = [0xB1, 0x03];
-TerminalMix.effectUnit24.dryWetKnob.midi = [0xB1, 0x2B];
+// TerminalMix.effectUnit24.dryWetKnob.midi = [0xB1, 0x2B];
 TerminalMix.effectUnit24.effectFocusButton.midi = [0x91, 0x0A];
 TerminalMix.effectUnit24.init();
-
-
-
-
 
 
 

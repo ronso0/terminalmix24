@@ -816,6 +816,7 @@
             } else {
                 index += 1;
             }
+            engine.setValue("[Skin]","show_4effectunits",1);
             this.setCurrentUnit(this.unitNumbers[index]);
         };
 
