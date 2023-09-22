@@ -17,8 +17,8 @@ function TerminalMix() {};
 // read this to prevent error messages for deck 3/4 output bindings
 // when using a 2-deck skin like Shade
 // https://bugs.launchpad.net/mixxx/+bug/1843649
-var numDecks = engine.getValue("[Master]","num_decks");
-var numSamplers = engine.getValue("[Master]","num_samplers");
+var numDecks = engine.getValue("[App]","num_decks");
+var numSamplers = engine.getValue("[App]","num_samplers");
 
 var bpmStartValue = [null];
 var defaultBeatjumpSize = 16;
@@ -1080,9 +1080,8 @@ TerminalMix.halfSec = function () {
 // Flash loop_in/_out when loop is active
 TerminalMix.activeLoopFlash = function () {
   TerminalMix.state["loopFlash"] =! TerminalMix.state["loopFlash"];
-
   var value, group;
-  // use [Master],num_decks here to avoid log spam with a 2-deck skin
+  // use [App],num_decks here to avoid log spam with a 2-deck skin
   for (var i=1; i<=numDecks; i++) {
       value = 0x00;
       group = "[Channel"+i+"]";
@@ -1103,7 +1102,7 @@ TerminalMix.activeLoopFlash = function () {
 TerminalMix.offsetKeyFlash = function () {
   TerminalMix.state["keyFlash"] =! TerminalMix.state["keyFlash"];
   var value, group;
-  // use [Master],num_decks here to avoid log spam with a 2-deck skin
+  // use [App],num_decks here to avoid log spam with a 2-deck skin
   for (var i=1; i<=numDecks; i++) {
       value = 0x00;
       group = "[Channel"+i+"]";
@@ -1125,7 +1124,7 @@ TerminalMix.offsetKeyFlash = function () {
 TerminalMix.playFromCueFlash = function () {
   TerminalMix.state["playFlash"] =! TerminalMix.state["playFlash"];
   var value, group;
-  // use [Master],num_decks here to avoid log spam with a 2-deck skin
+  // use [App],num_decks here to avoid log spam with a 2-deck skin
   for (var i=1; i<=numDecks; i++) {
       value = 0x00;
       group = "[Channel"+i+"]";
