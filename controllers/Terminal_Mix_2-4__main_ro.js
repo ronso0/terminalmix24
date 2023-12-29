@@ -140,9 +140,9 @@ TerminalMix.init = function (id,debug) {
     // TODO Hook up to
     // [Master],indicator_250millis
     // [Master],indicator_500millis
-    TerminalMix.timers["one50ms"] = engine.beginTimer(150, function() {TerminalMix.one50ms()});
-    TerminalMix.timers["qtrSec"] = engine.beginTimer(250, function() {TerminalMix.qtrSec();});
-    TerminalMix.timers["halfSec"] = engine.beginTimer(500,function() {TerminalMix.halfSec();});
+    TerminalMix.timers["one50ms"] = engine.beginTimer(150, TerminalMix.one50ms);
+    TerminalMix.timers["qtrSec"] = engine.beginTimer(250, TerminalMix.qtrSec);
+    TerminalMix.timers["halfSec"] = engine.beginTimer(500,TerminalMix.halfSec);
 
     // Prepare samplers
     for (var i=numSamplers; i>=1; i--) {
@@ -196,6 +196,9 @@ TerminalMix.wheelTurn = function (channel, control, value, status, group) {
     var deck = script.deckFromGroup(group);
     var wheelTicks = (value - 64);
     var loopEditmode = false;
+    var loopMarkerMoveFactor = 10;
+    // if loop_in or loop_out are longpressed move the marker
+    // if both are pressed move the entire loop (TODO verify loop length is const)
     if (TerminalMix.loopInLongPressed[group] == true) {
         // move loop_in marker
         engine.setValue(group, "loop_start_position",
@@ -229,46 +232,37 @@ TerminalMix.BPMwheel = function (channel, control, value, status, group) {
     if (!bpmStartValue[group]) {
         bpmStartValue[group] = 0;
     }
-    // When turned clockwise
-    if (value - 64 > 0) {
-        bpmStartValue[group] = bpmStartValue[group] + 1;
-    }
-    // anti-clockwise
-    else {
-        bpmStartValue[group] = bpmStartValue[group] - 1;
-    }
+
+    bpmStartValue[group] += value - 64;
 
     // if we've overcome the threshold ...
     if (bpmStartValue[group] > wheelTurnThreshold) {
         // Increase BPM
-        engine.setValue(group, "bpm", currentBPM + 1);
+        engine.setValue(group, "bpm_up");
         bpmStartValue[group] = null;
     } else if (bpmStartValue[group] <-wheelTurnThreshold && currentBPM > 1) {
         // decrease BPM
         // Allow slowing down to 1, not below (play backwards).
         // Deck remains 'playing', so we can accelerate it again later.
-        engine.setValue(group, "bpm", currentBPM - 1);
+        engine.setValue(group, "bpm_down");
         bpmStartValue[group] = null;
     }
 }
 
 
 // reset key and pitch_adjust
-// TerminalMix.beatsKnobPress = function (channel, control, value, status, group) {
-//TerminalMix.keyChange = function (channel, control, value, status, group) {
-TerminalMix.keyReset = function (channel, control, value, status, group) {
+TerminalMix.beatsKnobPress = function (channel, control, value, status, group) {
   if (value) {
       engine.setValue(group,"pitch",0);
       engine.setValue(group,"pitch_adjust",0);
-      script.triggerControl(group,"reset_key",50);
+      script.triggerControl(group,"reset_key",100);
   }
 }
 
 
 // reset key and pitch_adjust
-// TerminalMix.beatsKnobPress = function (channel, control, value, status, group) {
-//TerminalMix.keyChange = function (channel, control, value, status, group) {
-TerminalMix.keyReset_BAK = function (channel, control, value, status, group) {
+// when pressed, allow Beats knob to change key in smaller increments
+TerminalMix.beatsKnobPress_BAK = function (channel, control, value, status, group) {
   // press
   if (value) {
       TerminalMix.beatsKnobLongPressed[group] = false;
@@ -292,29 +286,28 @@ TerminalMix.keyReset_BAK = function (channel, control, value, status, group) {
           engine.setValue(group,"pitch",0);
           engine.setValue(group,"pitch_adjust",0);
       // Longpress release
-      } else {
-          TerminalMix.beatsKnobLongPressed[group] = false;
       }
+      TerminalMix.beatsKnobLongPressed[group] = false;
   }
 }
 
 // Beats knob changes key manually
 TerminalMix.beatsKnobTurn = function (channel, control, value, status, group) {
-  // Beats knob not pressed = fast key change
-  if (!TerminalMix.beatsKnobLongPressed[group]) {
-      if (value === 65) {
-          script.triggerControl(group,"pitch_up",50);
-      }
-      else if (value === 63) {
-          script.triggerControl(group,"pitch_down",50);
-      }
   // Beats knob pressed = slow key change
-  } else {
+  if (TerminalMix.beatsKnobLongPressed[group]) {
       if (value === 65) {
           script.triggerControl(group,"pitch_up_small",50);
       }
       else if (value === 63) {
           script.triggerControl(group,"pitch_down_small",50);
+      }
+  // Beats knob not pressed = fast key change
+  } else {
+      if (value === 65) {
+          script.triggerControl(group,"pitch_up",50);
+      }
+      else if (value === 63) {
+          script.triggerControl(group,"pitch_down",50);
       }
   }
 }
@@ -332,44 +325,65 @@ TerminalMix.shiftBeatsKnobTurn = function (channel, control, value, status, grou
 // Shifted hotcue press
 // short: activate saved loop(don't jump)
 // long: delete cue
-TerminalMix.hotcueShift = function (channel, control, value, status, group) {
-    var index = control - 55;
+// DEACTIVATED
+TerminalMix.hotcueShift = function(channel, control, value, status, group) {
+    var index = control - 85;
+    console.log(" ");
+    console.log("   hotcueShift: " + group + " : " + control + " : " + value);
+    console.log("   hotcueShift: " + group + " : " + index);
+    console.log(" ");
 
     // return if no hotcue / loopcue is set
-    if (engine.getValue(group, "hotcue_" + index + "_enabled") <= 0) {
+    // TODO both return "0" for saved loops
+    // console.log(group + ", hotcue_" + index + "_enabled = " + engine.getValue(group, "hotcue_" + index + "_enabled"));
+    // console.log(group + ", hotcue_" + index + "_status = " + engine.getValue(group, "hotcue_" + index + "_status"));
+    // if (engine.getValue(group, "hotcue_" + index + "_status") == 0) {
+    //   return;
+    // }
+
+    //console.log(group + ", hotcue_" + index + "_type = " + engine.getValue(group, "hotcue_" + index + "_type"));
+    if (engine.getValue(group, "hotcue_" + index + "_type") == 0) {
       return;
     }
 
+    var group_index = group + index;
+
     if (value) { // press
-        print("");
-        print("   hotcueShift" + group + ":" + index + "pressed");
-        TerminalMix.hotcueLongPressed[group, index] = false;
-        TerminalMix.loopInTimers[group, index] = engine.beginTimer(
+        // console.log(" ");
+        // console.log("   hotcueShift" + group + ":" + index + "pressed");
+        // console.log("   hotcueShift" + group_index);
+        if (engine.getValue(group, "hotcue_" + index + "_type") == 1) {
+          // console.log("   is hotcue > clear");
+          script.triggerControl(group, "hotcue_" + index + "_clear", 100);
+          return;
+        }
+        TerminalMix.hotcueLongPressed[group_index] = false;
+        TerminalMix.hotcueTimers[group_index] = engine.beginTimer(
             500,
             function() {
-                print("");
-                print("   hotcueShift" + group + ":" + index + " longpressed");
-                print("");
-                TerminalMix.hotcueLongPressed[group, index] = true;
-                TerminalMix.hotcueTimers[group, index] = null;
+                // console.log(" ");
+                // console.log("   hotcueShift" + group + ":" + index + " longpressed");
+                // console.log(" ");
+                TerminalMix.hotcueLongPressed[group_index] = true;
+                TerminalMix.hotcueTimers[group_index] = null;
             },
             true);
     } else { // release
-        print("");
-        print("   hotcueShift" + group + ":" + index + "released");
-        print("");
-        if (TerminalMix.hotcueLongPressed[group, index] == true) {
+        // console.log(" ");
+        // console.log("   hotcueShift" + group + ":" + index + "released");
+        // console.log(" ");
+        if (TerminalMix.hotcueLongPressed[group_index] == true) {
             // longpress clears the cue
             script.triggerControl(group, "hotcue_" + index + "_clear", 100);
         } else {
             // shortpress activates loop
             script.triggerControl(group, "hotcue_" + index + "_cueloop", 100);
         }
-        if (TerminalMix.hotcueTimers[group, index] !== null) {
-            engine.stopTimer(TerminalMix.hotcueTimers[group, index]);
-            delete TerminalMix.hotcueTimers[group, index];
+        if (TerminalMix.hotcueTimers[group_index] !== null) {
+            engine.stopTimer(TerminalMix.hotcueTimers[group_index]);
+            delete TerminalMix.hotcueTimers[group_index];
         }
-        TerminalMix.hotcueLongPressed[group, index] = false;
+        TerminalMix.hotcueLongPressed[group+index] = false;
     }
 }
 
@@ -415,21 +429,27 @@ TerminalMix.pitchSlider = function(channel, control, value, status, group) {
     }
 }
 
-
-
-TerminalMix.loopLengthPress = function (channel, control, value, status, group) {
+// set new 4-beat loop
+// DEACTIVATED
+// longpress should do rolling loops
+// An alternative is now implemented in c++:
+// * press and hold looproll button
+// * press beatloop_activate to adopt rolling loop
+// * release looproll button
+TerminalMix.loopLengthPress = function(channel, control, value, status, group) {
   // Press
   if (value) {
       TerminalMix.loopLengthLongPressed[group] = false;
       if (!engine.getValue(group,"loop_enabled")) {
-      // pseudo beatloop_roll:
-            TerminalMix.loopLengthTimers[group] = engine.beginTimer(
-                500,
-                "TerminalMix.loopLengthLongpress(\""+group+"\")",
-                true);
-      //      engine.setValue(group, "slip_enabled", 1);
-      //      script.triggerControl(group,"beatloop_2_activate",100);
-      // traditional 4-beat loop:
+          // pseudo beatloop_roll:
+          // TerminalMix.loopLengthTimers[group] = engine.beginTimer(
+          //     500,
+          //     "TerminalMix.loopLengthLongpress(\""+group+"\")",
+          //     true);
+          // engine.setValue(group, "slip_enabled", 1);
+          // script.triggerControl(group,"beatloop_2_activate",100);
+
+          // traditional 4-beat loop:
           script.triggerControl(group,"beatloop_4_activate",100);
       } else {
           // exit loop
@@ -439,10 +459,10 @@ TerminalMix.loopLengthPress = function (channel, control, value, status, group) 
   }
   // Release
   //  else {
-    //    print("stop timer "+TerminalMix.loopLengthTimers[group]+"");
+    //    console.log("stop timer "+TerminalMix.loopLengthTimers[group]+"");
     //    engine.stopTimer(TerminalMix.loopLengthTimers[group]);
     //    delete TerminalMix.loopLengthTimers[group];
-    //    // ToDo restore previous loop size
+    //    // TODO restore previous loop size
     //    engine.setValue(group,"beatloop_size",loopLength[group]);
     //    // disable slip mode if this was a long press
     //    engine.setValue(group, "slip_enabled", 0);
@@ -454,7 +474,8 @@ TerminalMix.loopLengthPress = function (channel, control, value, status, group) 
   //  }
 }
 
-TerminalMix.shiftedLoopLengthPress = function (channel, control, value, status, group) {
+// recall previous loop
+TerminalMix.shiftedLoopLengthPress = function(channel, control, value, status, group) {
   if (value) {
     // re-enable last loop.
     // either waits for the playposition to cross the loop-in point,
@@ -463,7 +484,7 @@ TerminalMix.shiftedLoopLengthPress = function (channel, control, value, status, 
   }
 }
 
-TerminalMix.loopLengthTurn = function (channel, control, value, status, group) {
+TerminalMix.loopLengthTurn = function(channel, control, value, status, group) {
     if (value === 65) {
         script.triggerControl(group,"loop_double",100);
     }
@@ -703,20 +724,17 @@ TerminalMix.loadCloneSampler = function (channel, control, value, status, group)
           // clone from long-press group to short-press group
           } else {
               TerminalMix.cloneSourceNum = TerminalMix.cloneSource.substr(8, 1);
-              // print("");
-              // print("     TerminalMix.cloneSource: " + TerminalMix.cloneSource + " #" + TerminalMix.cloneSourceNum);
-              // print("");
               switch (TerminalMix.cloneSource.substr(1, 7)) {
-                  case "Channel":
-                      engine.setValue(group,
-                                "CloneFromDeck",
-                                TerminalMix.cloneSourceNum);
-                      break;
-                  case "Sampler":
-                      engine.setValue(group,
-                                "CloneFromSampler",
-                                TerminalMix.cloneSourceNum);
-                      break;
+              case "Channel":
+                  engine.setValue(group,
+                            "LoadTrackFromDeck", // "CloneFromDeck" would also adopt play state
+                            TerminalMix.cloneSourceNum);
+                  break;
+              case "Sampler":
+                  engine.setValue(group,
+                            "LoadTrackFromSampler",
+                            TerminalMix.cloneSourceNum);
+                  break;
               }
           }
       // Longpress release
